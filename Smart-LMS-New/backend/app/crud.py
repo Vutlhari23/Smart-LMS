@@ -140,24 +140,60 @@ def grade_quiz_attempt(db: Session, student_id: int, quiz_id: int, answers: list
     db.refresh(attempt)
 
     score = 0
+
     for answer in answers:
-        question = db.query(models.Question).filter(models.Question.id == answer.get("question_id")).first()
+        question = (
+            db.query(models.Question)
+            .filter(models.Question.id == answer.get("question_id"))
+            .first()
+        )
+
         if not question:
+            print("Question not found:", answer.get("question_id"))
             continue
-        correct = question.correct_option == answer.get("chosen_option")
+
+        chosen_option = str(answer.get("chosen_option")).strip()
+
+        # Get the correct option field name
+        correct_option_key = question.correct_option.lower()
+
+        # Get the actual correct answer text
+        correct_answer = getattr(question, correct_option_key)
+
+        correct = (
+            chosen_option.strip().lower()
+            == str(correct_answer).strip().lower()
+        )
+
+        print("---------------")
+        print("Question ID:", question.id)
+        print("Chosen Answer:", chosen_option)
+        print("Correct Option Key:", correct_option_key)
+        print("Correct Answer:", correct_answer)
+        print("Is Correct:", correct)
+        print("Marks:", question.marks)
+        print("---------------")
+
         if correct:
             score += question.marks
+
         result = models.Result(
             attempt_id=attempt.id,
             question_id=question.id,
-            chosen_option=answer.get("chosen_option"),
+            chosen_option=chosen_option,
             correct=correct,
         )
+
         db.add(result)
+
+    print("Final Score:", score)
+
     attempt.score = score
     attempt.completed = True
+
     db.commit()
     db.refresh(attempt)
+
     return attempt
 
 
