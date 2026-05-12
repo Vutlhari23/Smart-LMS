@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/api";
 import { useAuth } from "../../context/AuthContext";
 
 export default function LoginPage() {
@@ -25,7 +25,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-md rounded-xl bg-white p-8 shadow-lg dark:bg-slate-900">
+    <div className="mx-auto max-w-md rounded-xl bg-white p-8 shadow-lg dark:bg-indigo-600">
       <h1 className="mb-4 text-2xl font-semibold">Sign in to Smart LMS</h1>
       {error && (
         <p className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">
@@ -55,7 +55,7 @@ export default function LoginPage() {
         </label>
         <button
           type="submit"
-          className="w-full rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
+          className="w-full rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
         >
           Login
         </button>

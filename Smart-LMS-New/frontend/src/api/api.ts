@@ -51,8 +51,7 @@ const api = {
   get: (path: string) => request(path, { method: "GET" }),
   post: (path: string, body?: any) => request(path, { method: "POST", body }),
   put: (path: string, body?: any) => request(path, { method: "PUT", body }),
-  delete: (path: string, body?: any) =>
-    request(path, { method: "DELETE", body }),
+  delete: (path: string, body?: any) => request(path, { method: "DELETE", body }),
   patch: (path: string, body?: any) => request(path, { method: "PATCH", body }),
 };
 

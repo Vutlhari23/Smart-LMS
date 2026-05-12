@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/api";
 
 interface QuestionShape {
   prompt: string;
@@ -73,39 +73,54 @@ export default function CreateQuiz() {
       return;
     }
 
-    try {
-      await api.post("/quizzes", {
-        course_id: selectedCourse,
-        title,
-        description,
-        duration_minutes: duration,
-        questions,
-      });
-      setMessage("Quiz published successfully.");
-      setTitle("");
-      setDescription("");
-      setDuration(10);
-      setQuestions([
-        {
-          prompt: "",
-          option_a: "",
-          option_b: "",
-          option_c: "",
-          option_d: "",
-          correct_option: "option_a",
-          marks: 1,
-        },
-      ]);
-    } catch (error) {
-      setMessage("Unable to publish quiz. Please try again.");
-    }
+try {
+  const token = localStorage.getItem("smart_lms_token");
+
+  const response = await fetch("http://localhost:8000/api/v1/quizzes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      course_id: selectedCourse,
+      title,
+      description,
+      duration_minutes: duration,
+      questions,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to publish quiz");
+  }
+
+  setMessage("Quiz published successfully.");
+  setTitle("");
+  setDescription("");
+  setDuration(10);
+
+  setQuestions([
+    {
+      prompt: "",
+      option_a: "",
+      option_b: "",
+      option_c: "",
+      option_d: "",
+      correct_option: "option_a",
+      marks: 1,
+    },
+  ]);
+} catch (error) {
+  setMessage("Unable to publish quiz. Please try again.");
+}
   };
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl bg-white p-6 shadow dark:bg-slate-900">
+      <section className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600">
         <h1 className="text-2xl font-semibold">Create Quiz</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-slate-700 dark:text-slate-200">
           Build quiz questions and assign them to one of your courses.
         </p>
       </section>
@@ -116,7 +131,7 @@ export default function CreateQuiz() {
       )}
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 rounded-xl bg-white p-6 shadow dark:bg-slate-900"
+        className="space-y-6 rounded-xl bg-white p-6 shadow dark:bg-indigo-600"
       >
         <label className="block">
           <span className="text-sm text-slate-700 dark:text-slate-200">
@@ -256,13 +271,13 @@ export default function CreateQuiz() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <button
             type="button"
-            className="rounded bg-slate-200 px-4 py-2 text-slate-900 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+            className="rounded bg-sky-100 px-4 py-2 text-slate-900 hover:bg-slate-300 dark:bg-indigo-950 dark:text-slate-100 dark:hover:bg-indigo-700"
             onClick={addQuestion}
           >
             Add question
           </button>
           <button
-            className="rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
+            className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
             type="submit"
           >
             Publish quiz

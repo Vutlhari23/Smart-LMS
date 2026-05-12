@@ -1,5 +1,6 @@
+
 import { useEffect, useRef, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/api";
 import { FaceMesh } from "@mediapipe/face_mesh";
 import { Camera } from "@mediapipe/camera_utils";
 
@@ -10,9 +11,101 @@ interface Props {
 export default function ProctoringCamera({ quizId }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
   const [warning, setWarning] = useState("");
   const [detecting, setDetecting] = useState(false);
+
   const previousYawRef = useRef<number | null>(null);
+  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showWarning = (message: string) => {
+    setWarning(message);
+
+    if (warningTimeoutRef.current) {
+      clearTimeout(warningTimeoutRef.current);
+    }
+
+    warningTimeoutRef.current = setTimeout(() => {
+      setWarning("");
+    }, 4000);
+  };
+useEffect(() => {
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      setWarning(
+        "You left the quiz tab. Please stay focused on the assessment."
+      );
+
+      api.post("/proctoring/logs", {
+        quiz_attempt_id: quizId,
+        event: "tab_switch",
+        details: "Student switched tabs or minimized the browser",
+      }).catch(() => null);
+    }
+  };
+
+  const handleBlur = () => {
+    setWarning(
+      "Another window or application was opened. Return to the quiz."
+    );
+
+    api.post("/proctoring/logs", {
+      quiz_attempt_id: quizId,
+      event: "window_blur",
+      details: "Quiz window lost focus",
+    }).catch(() => null);
+  };
+
+  // Disable right click
+  const disableRightClick = (e: MouseEvent) => {
+    e.preventDefault();
+
+    setWarning("Right click is disabled during the quiz.");
+  };
+
+  // Disable copy shortcuts
+  const disableKeys = (e: KeyboardEvent) => {
+    // Ctrl+C, Ctrl+V, Ctrl+U, Alt+Tab, F12
+    if (
+      (e.ctrlKey &&
+        ["c", "v", "u"].includes(e.key.toLowerCase())) ||
+      e.key === "F12"
+    ) {
+      e.preventDefault();
+
+      setWarning(
+        "Keyboard shortcuts are disabled during the quiz."
+      );
+    }
+  };
+
+  document.addEventListener(
+    "visibilitychange",
+    handleVisibilityChange
+  );
+
+  window.addEventListener("blur", handleBlur);
+
+  document.addEventListener("contextmenu", disableRightClick);
+
+  document.addEventListener("keydown", disableKeys);
+
+  return () => {
+    document.removeEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    window.removeEventListener("blur", handleBlur);
+
+    document.removeEventListener(
+      "contextmenu",
+      disableRightClick
+    );
+
+    document.removeEventListener("keydown", disableKeys);
+  };
+}, [quizId]);
 
   useEffect(() => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -21,6 +114,7 @@ export default function ProctoringCamera({ quizId }: Props) {
       locateFile: (file) =>
         `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
     });
+
     faceMesh.setOptions({
       maxNumFaces: 1,
       refineLandmarks: true,
@@ -30,44 +124,65 @@ export default function ProctoringCamera({ quizId }: Props) {
 
     faceMesh.onResults((results) => {
       const canvas = canvasRef.current;
-      if (
-        !canvas ||
-        !results.multiFaceLandmarks ||
-        !results.multiFaceLandmarks[0]
-      )
-        return;
+
+      if (!canvas) return;
+
       const ctx = canvas.getContext("2d");
+
       if (!ctx) return;
 
       canvas.width = videoRef.current!.videoWidth;
       canvas.height = videoRef.current!.videoHeight;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // No face detected
+      if (
+        !results.multiFaceLandmarks ||
+        !results.multiFaceLandmarks[0]
+      ) {
+        showWarning("Face not detected. Please stay focused on the quiz.");
+
+        api.post("/proctoring/logs", {
+          quiz_attempt_id: quizId,
+          event: "face_missing",
+          details: "No face detected",
+        }).catch(() => null);
+
+        return;
+      }
+
       const landmarks = results.multiFaceLandmarks[0];
+
       const leftEye = landmarks[33];
       const rightEye = landmarks[263];
-      const nose = landmarks[1];
+
       const yaw = rightEye.x - leftEye.x;
 
+      // Detect large head movement
       if (previousYawRef.current !== null) {
         const yawDelta = Math.abs(yaw - previousYawRef.current);
+
         if (yawDelta > 0.03) {
-          setWarning("Suspicious head movement detected. Please stay focused.");
-          api
-            .post("/proctoring/logs", {
-              quiz_attempt_id: quizId,
-              event: "head_movement",
-              details: `Yaw delta ${yawDelta.toFixed(3)}`,
-            })
-            .catch(() => null);
-        } else {
-          setWarning("");
+          showWarning(
+            "Please keep focused on the quiz and avoid looking away."
+          );
+
+          api.post("/proctoring/logs", {
+            quiz_attempt_id: quizId,
+            event: "head_movement",
+            details: `Yaw delta ${yawDelta.toFixed(3)}`,
+          }).catch(() => null);
         }
       }
+
       previousYawRef.current = yaw;
 
+      // Draw landmarks
       ctx.strokeStyle = "#00FF00";
+      ctx.fillStyle = "#00FF00";
       ctx.lineWidth = 1;
+
       landmarks.forEach((landmark) => {
         ctx.beginPath();
         ctx.arc(
@@ -96,7 +211,13 @@ export default function ProctoringCamera({ quizId }: Props) {
 
     return () => {
       camera.stop();
+
       setDetecting(false);
+
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
+      }
+
       if (videoRef.current && videoRef.current.srcObject) {
         (videoRef.current.srcObject as MediaStream)
           .getTracks()
@@ -106,31 +227,48 @@ export default function ProctoringCamera({ quizId }: Props) {
   }, [quizId]);
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow dark:bg-slate-900">
+    <section className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600">
       <h2 className="text-lg font-semibold">Proctoring Monitor</h2>
-      <p className="mt-2 text-slate-600 dark:text-slate-300">
-        The webcam uses MediaPipe face tracking to detect head movement and log
-        suspicious activity.
+
+      <p className="mt-2 text-slate-700 dark:text-slate-200">
+        Please remain focused on your quiz. Looking away frequently may be
+        recorded as suspicious activity.
       </p>
+
       <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
           <video
             ref={videoRef}
             className="h-64 w-full object-cover"
             playsInline
             muted
           />
-          <canvas ref={canvasRef} className="absolute inset-0 h-64 w-full" />
+
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 h-64 w-full"
+          />
         </div>
+
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/70">
-          <p className="text-sm text-slate-500 dark:text-slate-400">Status</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Status
+          </p>
+
           <p className="mt-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">
             {detecting ? "Monitoring active" : "Starting sensor..."}
           </p>
+
           {warning && (
-            <p className="mt-3 rounded border border-amber-300 bg-amber-50 p-3 text-amber-800 dark:border-amber-700 dark:bg-amber-950/20 dark:text-amber-200">
-              {warning}
-            </p>
+            <div className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 dark:border-red-700 dark:bg-red-950/20">
+              <p className="font-semibold text-red-700 dark:text-red-300">
+                Attention Required
+              </p>
+
+              <p className="mt-1 text-sm text-red-600 dark:text-red-200">
+                {warning}
+              </p>
+            </div>
           )}
         </div>
       </div>

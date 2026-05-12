@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/api";
 
 interface SubmissionStatus {
   id: number;
@@ -18,26 +18,56 @@ export default function StudentAssignments() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    api
-      .get("/assignments")
-      .then((res) => setAssignments(res.data))
-      .catch(() => setMessage("Unable to load assignments."));
+const token = localStorage.getItem("smart_lms_token");
 
-    api
-      .get("/assignments/submissions")
-      .then((res) => {
-        const statusMap = res.data.reduce(
-          (
-            acc: Record<number, SubmissionStatus>,
-            submission: SubmissionStatus,
-          ) => {
-            acc[submission.assignment_id] = submission;
-            return acc;
-          },
-        );
-        setSubmissionStatus(statusMap);
-      })
-      .catch(() => {});
+// Load assignments
+fetch("http://localhost:8000/api/v1/assignments", {
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+})
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error("Failed to load assignments");
+    }
+
+    return response.json();
+  })
+  .then((data) => setAssignments(data))
+  .catch(() => setMessage("Unable to load assignments."));
+
+// Load assignment submissions
+fetch("http://localhost:8000/api/v1/assignments/submissions", {
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+})
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error("Failed to load submissions");
+    }
+
+    return response.json();
+  })
+  .then((data) => {
+    const statusMap = data.reduce(
+      (
+        acc: Record<number, SubmissionStatus>,
+        submission: SubmissionStatus,
+      ) => {
+        acc[submission.assignment_id] = submission;
+        return acc;
+      },
+      {},
+    );
+
+    setSubmissionStatus(statusMap);
+  })
+  .catch(() => {});
   }, []);
 
   const handleChange = (assignmentId: number, value: string) => {
@@ -64,9 +94,9 @@ export default function StudentAssignments() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl bg-white p-6 shadow dark:bg-slate-900">
+      <section className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600">
         <h1 className="text-2xl font-semibold">Assignments</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-slate-700 dark:text-slate-200">
           Submit assignments for your enrolled courses and track your progress.
         </p>
       </section>
@@ -81,10 +111,10 @@ export default function StudentAssignments() {
           return (
             <div
               key={assignment.id}
-              className="rounded-xl bg-white p-6 shadow dark:bg-slate-900"
+              className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600"
             >
               <h2 className="text-xl font-semibold">{assignment.title}</h2>
-              <p className="mt-2 text-slate-600 dark:text-slate-300">
+              <p className="mt-2 text-slate-700 dark:text-slate-200">
                 {assignment.description}
               </p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -92,7 +122,7 @@ export default function StudentAssignments() {
                   Course ID: {assignment.course_id} · Due:{" "}
                   {assignment.due_date ?? "No due date"}
                 </p>
-                <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <span className="inline-flex rounded-full bg-sky-50 px-3 py-1 text-sm text-slate-700 dark:bg-indigo-950 dark:text-slate-200">
                   {status ? "Submitted" : "Not submitted"}
                 </span>
               </div>
@@ -120,7 +150,7 @@ export default function StudentAssignments() {
               />
               <button
                 onClick={() => handleSubmit(assignment.id)}
-                className="mt-4 rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
+                className="mt-4 rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
               >
                 Submit assignment
               </button>

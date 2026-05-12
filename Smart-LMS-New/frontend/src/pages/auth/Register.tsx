@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
 
 export default function RegisterPage() {
@@ -29,7 +29,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="mx-auto max-w-md rounded-xl bg-white p-8 shadow-lg dark:bg-slate-900">
+    <div className="mx-auto max-w-md rounded-xl bg-white p-8 shadow-lg dark:bg-indigo-600">
       <h1 className="mb-4 text-2xl font-semibold">Create your account</h1>
       {success && (
         <p className="mb-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-700">
@@ -85,7 +85,7 @@ export default function RegisterPage() {
         </label>
         <button
           type="submit"
-          className="w-full rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
+          className="w-full rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
         >
           Register
         </button>

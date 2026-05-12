@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../../api/axios";
+import api from "../../api/api";
 
 export default function StudentQuizzes() {
   const [quizzes, setQuizzes] = useState<any[]>([]);
@@ -15,9 +15,9 @@ export default function StudentQuizzes() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl bg-white p-6 shadow dark:bg-slate-900">
+      <section className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600">
         <h1 className="text-2xl font-semibold">Available Quizzes</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-slate-700 dark:text-slate-200">
           Browse quizzes for your enrolled courses and start the next test.
         </p>
       </section>
@@ -30,16 +30,16 @@ export default function StudentQuizzes() {
         {quizzes.map((quiz) => (
           <div
             key={quiz.id}
-            className="rounded-xl bg-white p-5 shadow dark:bg-slate-900"
+            className="rounded-xl bg-white p-5 shadow dark:bg-indigo-600"
           >
             <h2 className="text-xl font-semibold">{quiz.title}</h2>
-            <p className="mt-2 text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-slate-700 dark:text-slate-200">
               {quiz.description}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 to={`/student/quiz/${quiz.id}`}
-                className="rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
+                className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
               >
                 Attempt quiz
               </Link>

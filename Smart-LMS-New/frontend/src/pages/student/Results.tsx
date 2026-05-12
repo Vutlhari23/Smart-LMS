@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/api";
 
 export default function StudentResults() {
   const [attempts, setAttempts] = useState<any[]>([]);
@@ -14,9 +14,9 @@ export default function StudentResults() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl bg-white p-6 shadow dark:bg-slate-900">
+      <section className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600">
         <h1 className="text-2xl font-semibold">Quiz Results</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-slate-700 dark:text-slate-200">
           Review your quiz performance and track your marks over time.
         </p>
       </section>
@@ -29,10 +29,10 @@ export default function StudentResults() {
         {attempts.map((attempt) => (
           <div
             key={attempt.id}
-            className="rounded-xl bg-white p-6 shadow dark:bg-slate-900"
+            className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600"
           >
             <h2 className="text-xl font-semibold">Quiz ID {attempt.quiz_id}</h2>
-            <p className="mt-2 text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-slate-700 dark:text-slate-200">
               Score: {attempt.score}
             </p>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">

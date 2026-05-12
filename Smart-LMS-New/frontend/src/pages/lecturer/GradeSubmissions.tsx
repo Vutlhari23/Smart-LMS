@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/api";
 
 interface SubmissionItem {
   id: number;
@@ -80,9 +80,9 @@ export default function GradeSubmissions() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl bg-white p-6 shadow dark:bg-slate-900">
+      <section className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600">
         <h1 className="text-2xl font-semibold">Grade Submissions</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-slate-700 dark:text-slate-200">
           Review student assignment work, assign grades, and provide feedback.
         </p>
       </section>
@@ -95,7 +95,7 @@ export default function GradeSubmissions() {
         {submissions.map((submission) => (
           <div
             key={submission.id}
-            className="rounded-xl bg-white p-6 shadow dark:bg-slate-900"
+            className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600"
           >
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -111,7 +111,7 @@ export default function GradeSubmissions() {
                   {new Date(submission.submitted_at).toLocaleString()}
                 </p>
               </div>
-              <div className="rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-800 dark:bg-slate-800 dark:text-slate-100">
+              <div className="rounded-xl bg-sky-50 px-3 py-2 text-sm text-slate-800 dark:bg-indigo-950 dark:text-slate-100">
                 Current grade: {submission.grade ?? "Not graded"}
               </div>
             </div>
@@ -157,7 +157,7 @@ export default function GradeSubmissions() {
               </div>
               <button
                 onClick={() => handleSave(submission.id)}
-                className="rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
+                className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
               >
                 Save grade
               </button>

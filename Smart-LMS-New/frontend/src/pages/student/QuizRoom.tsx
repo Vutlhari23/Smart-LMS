@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import api from "../../api/axios";
+import api from "../../api/api";
 import ProctoringCamera from "../../components/Proctoring/ProctoringCamera";
 
 export default function QuizRoom() {
@@ -40,10 +40,10 @@ export default function QuizRoom() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-white p-6 shadow dark:bg-slate-900">
+      <div className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600">
         <h1 className="text-2xl font-semibold">Quiz Room</h1>
         {quiz && (
-          <p className="mt-2 text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-slate-700 dark:text-slate-200">
             {quiz.title}
           </p>
         )}
@@ -58,7 +58,7 @@ export default function QuizRoom() {
         {quiz?.questions?.map((question: any) => (
           <div
             key={question.id}
-            className="rounded-xl bg-white p-5 shadow dark:bg-slate-900"
+            className="rounded-xl bg-white p-5 shadow dark:bg-indigo-600"
           >
             <h2 className="text-lg font-semibold">{question.prompt}</h2>
             <div className="mt-3 space-y-2">
@@ -85,7 +85,7 @@ export default function QuizRoom() {
       {quiz && (
         <button
           onClick={handleSubmit}
-          className="rounded bg-slate-900 px-5 py-3 text-white hover:bg-slate-700"
+          className="rounded bg-indigo-600 px-5 py-3 text-white hover:bg-indigo-700"
         >
           Submit Quiz
         </button>

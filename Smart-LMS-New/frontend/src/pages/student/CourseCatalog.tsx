@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/api";
 
 export default function CourseCatalog() {
   const [courses, setCourses] = useState([]);
@@ -13,19 +13,35 @@ export default function CourseCatalog() {
   }, []);
 
   const enroll = async (courseId: number) => {
-    try {
-      await api.post("/enrollments", { course_id: courseId });
-      setMessage("Enrolled successfully!");
-    } catch (error) {
-      setMessage("Enrollment failed. Check your login or course availability.");
-    }
+try {
+  const token = localStorage.getItem("smart_lms_token");
+
+  const response = await fetch("http://localhost:8000/api/v1/enrollments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      course_id: courseId,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Enrollment failed");
+  }
+
+  setMessage("Enrolled successfully!");
+} catch (error) {
+  setMessage("Enrollment failed. Check your login or course availability.");
+}
   };
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-white p-6 shadow dark:bg-slate-900">
+      <div className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600">
         <h1 className="text-2xl font-semibold">Course Catalog</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-slate-700 dark:text-slate-200">
           Browse available courses and enroll to start learning.
         </p>
       </div>
@@ -38,16 +54,16 @@ export default function CourseCatalog() {
         {courses.map((course: any) => (
           <div
             key={course.id}
-            className="rounded-xl bg-white p-5 shadow dark:bg-slate-900"
+            className="rounded-xl bg-white p-5 shadow dark:bg-indigo-600"
           >
             <h2 className="text-xl font-semibold">{course.title}</h2>
-            <p className="mt-2 text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-slate-700 dark:text-slate-200">
               {course.description}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <button
                 onClick={() => enroll(course.id)}
-                className="rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
+                className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
               >
                 Enroll
               </button>

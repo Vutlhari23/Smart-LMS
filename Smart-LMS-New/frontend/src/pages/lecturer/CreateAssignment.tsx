@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import api from "../../api/axios";
+import api from "../../api/api";
 
 export default function CreateAssignment() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -22,27 +22,41 @@ export default function CreateAssignment() {
       setMessage("Please select a course first.");
       return;
     }
-    try {
-      await api.post("/assignments", {
-        course_id: courseId,
-        title,
-        description,
-        due_date: dueDate || null,
-      });
-      setMessage("Assignment created successfully.");
-      setTitle("");
-      setDescription("");
-      setDueDate("");
-    } catch (error) {
-      setMessage("Unable to create assignment. Please try again.");
-    }
+try {
+  const token = localStorage.getItem("smart_lms_token");
+
+  const response = await fetch("http://localhost:8000/api/v1/assignments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      course_id: courseId,
+      title,
+      description,
+      due_date: dueDate || null,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create assignment");
+  }
+
+  setMessage("Assignment created successfully.");
+  setTitle("");
+  setDescription("");
+  setDueDate("");
+} catch (error) {
+  setMessage("Unable to create assignment. Please try again.");
+}
   };
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl bg-white p-6 shadow dark:bg-slate-900">
+      <section className="rounded-xl bg-white p-6 shadow dark:bg-indigo-600">
         <h1 className="text-2xl font-semibold">Create Assignment</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-slate-700 dark:text-slate-200">
           Add assignments to your course, set deadlines, and track student
           submissions.
         </p>
@@ -54,7 +68,7 @@ export default function CreateAssignment() {
       )}
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 rounded-xl bg-white p-6 shadow dark:bg-slate-900"
+        className="space-y-4 rounded-xl bg-white p-6 shadow dark:bg-indigo-600"
       >
         <label className="block">
           <span className="text-sm text-slate-700 dark:text-slate-200">
@@ -109,7 +123,7 @@ export default function CreateAssignment() {
           />
         </label>
         <button
-          className="rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
+          className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
           type="submit"
         >
           Create assignment
